@@ -1,0 +1,15 @@
+AT&T|United States|7018|2228
+CenturyLink|United States|209,3356,3549,4323|1888,4976,2536,2028
+GTT Communications, Inc|United States|3257|1576
+KPN International|Netherlands|286|276
+Liberty Global|United Kingdom|6830|777
+NTT Communications|Japan|2914|1714
+Orange|France|5511|181
+PCCW Global|Hong Kong|3491|680
+Sprint|Japan|1239|392
+Tata Communications India Limited|India|6453|724
+Telecom Italia Sparkle|Italy|6762|482
+Telia Carrier|Sweden|1299|1,664
+Telxius|Spain|12956|304
+Verizon Enterprise Solutions|United States|701,702,703,2828|1204,280,98,1031
+Zayo Group|United States|6461|1718
