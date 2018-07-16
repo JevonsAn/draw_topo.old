@@ -46,181 +46,55 @@
 					// .attr("transform","translate(1350,0)")
 					// .attr("fill","#000");
 
-	d3.json(jsonname, function(error, graph) {
-        if (error) throw error;
+	d3.json("json", function(error, graph) {
+    if (error) throw error;
 
-        let link = svg.append("g")
-            .attr("class", "links")
-          .selectAll("line")
-          .data(graph.links)
-          .enter().append("line")
-            .attr("stroke-width", function(d) { return 1; })//Math.sqrt(d.value);
-            .attr('marker-end',function(d) {
-              if (d.shangye == "P2C") return "";
-              else return 'url(#arrowhead)';
-              })
-            .attr("marker-start",function(d) {
-              if (d.shangye == "C2P") return "";
-              else return 'url(#arrowhead2)';
-              })
-            .attr("id",function (d) {
-              return d.source+d.target;
-            });
+    let node = svg.selectAll(".node")
+                  .data(graph)
+                .enter().append("g")
+                  .attr("class", "node")
+                  .attr("id",function (d) {
+                    return "node"+d.asn;
+                  });
 
-        link.append("title").text(function (d) {
-          return d.zhanshi;
-        });
+    node.append("rect")
+        .attr("stroke","#666")
+        .attr("stroke-width","1px")
+        .attr("fill", d => d.color)
+        .attr("x", d => d.xp)
+        .attr("y", d => d.yp)
+        .attr("width", d => d.width)
+        .attr("height", "20")
+        .on("click",function(d) {
+          
+        })
+        .on("dblclick",function (d) {;
+          
+        })
+        // .call(d3.drag()
+        //     .on("start", dragstarted)
+        //     .on("drag", dragged)
+        //     .on("end", dragended));
 
-        var radius = 3;
+    node.append("title")
+        .text(d => d.asn);
 
-        d3.selectAll("line").on("click",function(d) {
-		  if (d.click==0) {
-			d3.select(this).style("stroke","#DC143C");
-			d.click=1;
-		  }
-		  else {
-			d3.select(this).style("stroke","#333");
-			d.click=0;
-		  }
-
-		});
-
-        var node = svg.selectAll(".node")
-                      .data(graph.nodes)
-                    .enter().append("g")
-                      .attr("class", "node")
-                      .attr("id",function (d) {
-                        return "node"+d.ip[0].split("/")[0];
-                      });
-
-        node.append("circle")
-            .attr("id",function (d) {
-                        return "circle"+d.ip[0].split("/")[0];
-                })
-            // .attr("r", 5)
-            // .attr("fill", function(d) { return color(d.group); })
-            .attr("stroke","#666")
-            .attr("stroke-width","1px")
-            .attr("fill","#87CEEB")
-            .attr("class","node2")
-            // .attr("x", "-8px")  6495ED
-            // .attr("y", "-8px")
-            .attr("r","5")
-            .on("click",function(d) {
-              if (d.click==0) {
-                var color;
-                if (radioNow == "attack_ip")
-                  color = Colors.attackColor;
-                else if (radioNow == "allow_ip")
-                  color = Colors.protectColor;
-                else if (radioNow == "stop_ip")
-                  color = Colors.preventColor;
-                d3.select(this).attr("fill",color)
-                addInput(d.ip[0].split("/")[0])
-                d3.select("#text"+d.id).style("font-size", 15);
-                d.click=1;
-              }
-              else {
-                removeInput(d.ip[0].split("/")[0])
-                d3.select(this).attr("fill","#87CEEB")
-                d3.select("#text"+d.id).style("font-size", 9);
-                d.click=0;
-              }
-            })
-            .on("dblclick",function (d) {;
-              d3.select(this)
-                .attr("fx",d.x)
-                .attr("fy",d.y)
-            })
-            .call(d3.drag()
-                .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended));
-
-
-        // img = svg.selectAll("image").
-
-        node.append("title")
-            .text(function (d) {
-              s = "IP地址 : ";
-              if (d.type == "host"){
-                s += d.ip+"\n";
-              }
-              else{
-                s += d.ip[0] +"\n";
-                for (var i = 1; i <= d.ip.length - 1; i++) {
-                   s += "\t" + d.ip[i] + "\n";
-                }
-              }
-              s+="ASN : " + d.ASN;
-              if (("asname" in d )&&("prefix" in d)){
-                s +="\nAS名称 : " + d.asname + "\n声明前缀 : " + d.prefix;
-              }
-              if (("suzhuip" in d )&&("suzhuid" in d)){
-                s +="\n宿主机IP地址 : " + d.suzhuip + "\n宿主机ID : " + d.suzhuid;
-              }
-              return s;
-            });
-
-        node.append("text")
-            .attr("dx", 0)
-            .attr("dy", ".35em")
-            .attr("id", function(d) {
-              return "text"+d.id;
-            })
-            .attr("style","background-color:white;opacity:1;")
-            .style("text-anchor", "middle")
-            .style("fill", "#444")
-            .style("font-family", "Arial")
-            .style("font-size", 9)
-            .text(function(d) {
-              return d.ASN;
-            })
-            .call(getBB);
-
-
-        function getBB(selection) {
-            selection.each(function(d){d.bbox = this.getBBox();})
-        }
-
-        simulation
-            .nodes(graph.nodes)
-            .on("tick", ticked);
-
-        simulation.force("link")
-            .links(graph.links);
-
-        function ticked() {
-          link
-              .attr("x1", function(d) { return d.source.x; })
-              .attr("y1", function(d) { return d.source.y; })
-              .attr("x2", function(d) { return d.target.x; })
-              .attr("y2", function(d) { return d.target.y; });
-          // node
-          //     .attr("x", function(d) { return d.x; })
-          //     .attr("y", function(d) {  return d.y; });
-          node.selectAll("circle")
-              .attr("cx", function(d) { return d.x; })
-              .attr("cy", function(d) {  return d.y; });
-          node.selectAll("text")
-              .attr("x", function(d) { return d.x-12+10; })
-              .attr("y", function(d) {  return d.y-15+5; });
-          node.selectAll("rect")
-              .attr("x", function(d) { return d.x-12; })
-              .attr("y", function(d) {  return d.y-15; });
-
-          // node.selectAll("image")
-          //     .attr("x", function(d) { d.x = Math.max(radius, Math.min(width - radius, d.x)); return d.x-10; })
-          //     .attr("y", function(d) { d.y = Math.max(radius, Math.min(height - radius, d.y)); return d.y-10; });
-          // node.selectAll("text")
-          //     .attr("x", function(d) { d.x = Math.max(radius, Math.min(width - radius, d.x)); return d.x-20; })
-          //     .attr("y", function(d) { d.y = Math.max(radius, Math.min(height - radius, d.y)); return d.y-20; });
-          // node.selectAll("rect")
-          //     .attr("x", function(d) { d.x = Math.max(radius, Math.min(width - radius, d.x)); return d.x-40; })
-          //     .attr("y", function(d) { d.y = Math.max(radius, Math.min(height - radius, d.y)); return d.y-18; });
-        }
-
-      });
+    // node.append("text")
+    //     .attr("dx", 0)
+    //     .attr("dy", ".35em")
+    //     .attr("id", function(d) {
+    //       return "text"+d.id;
+    //     })
+    //     .attr("style","background-color:white;opacity:1;")
+    //     .style("text-anchor", "middle")
+    //     .style("fill", "#444")
+    //     .style("font-family", "Arial")
+    //     .style("font-size", 9)
+    //     .text(function(d) {
+    //       return d.ASN;
+    //     })
+    //     .call(getBB);
+  });
 
 </script>
 </html>

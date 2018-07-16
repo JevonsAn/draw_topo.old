@@ -11,7 +11,7 @@ settings = {
     "static_path": os.path.join(os.path.dirname(__file__), "static"),
 }
 x_scale = [10, 15, 10, 10, 10, 10, 10, 20, 10, 10, 10, 10]
-x_width = [x/sum(x_scale) * 1200 for x in x_scale]
+x_width = [x / sum(x_scale) * 1200 for x in x_scale]
 x_list = [100 + sum(x_width[:i]) for i in range(len(x_width) + 1)]
 p_list = [-180, -150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180]
 du_list = ['%d° W' % i for i in range(180, -1, -30)] + ['%d° E' % i for i in range(30, 181, 30)]
@@ -47,10 +47,8 @@ def rand_color():
 
     h = random.randint(0, 360)
     s = random.randint(0, 256) / 256
-    v = random.randint(0, 200) / 256
-    print(h, s, v)
+    v = random.randint(0, 256) / 256
     r, g, b = hsv2rgb(h, s, v)
-    print(r, g, b)
     res = "#%2s" % hex(r)[2:] + "%2s" % hex(g)[2:] + "%2s" % hex(b)[2:]
     res = res.upper().replace(" ", "0")
     return res
@@ -69,14 +67,16 @@ def calc_posi(lgt):
 
 
 def rect_posi():
+    n = -1
     rects = []
     for asn in asns:
+        n += 1
         a = {}
-        a["name"] = str(asn["asn"])
+        a["asn"] = int(asn["asn"])
         a["color"] = rand_color()
-        a["yp"] = 10 + len(rects) * 20
-        min_x = asn["min_lgt"]
-        max_x = asn["max_lgt"]
+        a["yp"] = 50 + n * 20
+        min_x = float(asn["min_lgt"])
+        max_x = float(asn["max_lgt"])
         if max_x <= 180:
             a["xp"] = calc_posi(min_x)
             a["width"] = calc_posi(max_x) - a["xp"]
@@ -88,7 +88,7 @@ def rect_posi():
             a["xp"] = calc_posi(-180)
             a["width"] = calc_posi(max_x - 360) - a["xp"]
             rects.append(a)
-
+    return rects
 
 
 class MainHandler(tornado.web.RequestHandler):
