@@ -40,7 +40,7 @@
 	let yAxis = svg.append('g')
 				   .attr('class', 'yAxisis')
 				   .attr('transform', `translate(100, 50)`)
-				   .call(d3.axisLeft(yScale))
+				   .call(d3.axisLeft(yScale));
 					// .append("text")//添加坐标轴说明
 					// .text("经度")
 					// .attr("transform","translate(1350,0)")
@@ -58,8 +58,8 @@
                   });
 
     node.append("rect")
-        .attr("stroke","#666")
-        .attr("stroke-width","1px")
+        // .attr("stroke","#666")
+        // .attr("stroke-width","1px")
         .attr("fill", d => d.color)
         .attr("x", d => d.xp)
         .attr("y", d => d.yp)
@@ -67,10 +67,7 @@
         .attr("height", "20")
         .on("click",function(d) {
           
-        })
-        .on("dblclick",function (d) {;
-          
-        })
+        });
         // .call(d3.drag()
         //     .on("start", dragstarted)
         //     .on("drag", dragged)

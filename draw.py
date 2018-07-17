@@ -47,7 +47,7 @@ def rand_color():
 
     h = random.randint(0, 360)
     s = random.randint(0, 256) / 256
-    v = random.randint(0, 256) / 256
+    v = random.randint(100, 200) / 256
     r, g, b = hsv2rgb(h, s, v)
     res = "#%2s" % hex(r)[2:] + "%2s" % hex(g)[2:] + "%2s" % hex(b)[2:]
     res = res.upper().replace(" ", "0")
@@ -55,7 +55,7 @@ def rand_color():
 
 
 def calc_posi(lgt):
-    t = 0
+    t = len(p_list) - 2
     for i in range(len(p_list) - 1):
         if p_list[i] <= lgt < p_list[i + 1]:
             t = i
@@ -63,7 +63,7 @@ def calc_posi(lgt):
     base = x_list[t]
     width = lgt - p_list[t]
     real_width = width / 30 * x_width[t]
-    return base + real_width
+    return base + real_width + 1
 
 
 def rect_posi():
@@ -74,7 +74,7 @@ def rect_posi():
         a = {}
         a["asn"] = int(asn["asn"])
         a["color"] = rand_color()
-        a["yp"] = 50 + n * 20
+        a["yp"] = 50 + n * 20 + 1
         min_x = float(asn["min_lgt"])
         max_x = float(asn["max_lgt"])
         if max_x <= 180:
@@ -85,9 +85,15 @@ def rect_posi():
             a["xp"] = calc_posi(min_x)
             a["width"] = calc_posi(180) - a["xp"]
             rects.append(a)
-            a["xp"] = calc_posi(-180)
-            a["width"] = calc_posi(max_x - 360) - a["xp"]
-            rects.append(a)
+            b = {}
+            b["asn"] = a["asn"]
+            b["color"] = a["color"]
+            b["yp"] = a["yp"]
+            b["xp"] = calc_posi(-180)
+            b["width"] = calc_posi(max_x - 360) - b["xp"]
+            print(min_x, max_x)
+            print(calc_posi(-180), calc_posi(180), a, b)
+            rects.append(b)
     return rects
 
 
