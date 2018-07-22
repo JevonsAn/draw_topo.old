@@ -5,7 +5,7 @@ import random
 import math
 import json
 
-from info import asns
+from info import asns, citys
 
 settings = {
     "static_path": os.path.join(os.path.dirname(__file__), "static"),
@@ -47,7 +47,7 @@ def rand_color():
 
     h = random.randint(0, 360)
     s = random.randint(0, 256) / 256
-    v = random.randint(100, 200) / 256
+    v = random.randint(190, 220) / 256
     r, g, b = hsv2rgb(h, s, v)
     res = "#%2s" % hex(r)[2:] + "%2s" % hex(g)[2:] + "%2s" % hex(b)[2:]
     res = res.upper().replace(" ", "0")
@@ -67,14 +67,22 @@ def calc_posi(lgt):
 
 
 def rect_posi():
-    n = -1
+    thigh = 50
     rects = []
+    # print([t['scale'] for t in asns])
+    asns.sort(key=lambda As: int(As['scale']), reverse=True)
     for asn in asns:
-        n += 1
+        t1 = 3
+        t2 = 0
+        high = math.log(int(asn["scale"])) * t1 + t2
         a = {}
         a["asn"] = int(asn["asn"])
         a["color"] = rand_color()
-        a["yp"] = 50 + n * 20 + 1
+        a["yp"] = thigh + 1
+        a["height"] = high
+        thigh += high
+        a["name"] = f'{asn["asn"]}, {asn["name"]}, {asn["country"]}'
+        a["scale"] = asn["scale"]
         min_x = float(asn["min_lgt"])
         max_x = float(asn["max_lgt"])
         if max_x <= 180:
@@ -89,10 +97,13 @@ def rect_posi():
             b["asn"] = a["asn"]
             b["color"] = a["color"]
             b["yp"] = a["yp"]
+            b["name"] = a["name"]
+            b["scale"] = a["scale"]
+            b["height"] = a["height"]
             b["xp"] = calc_posi(-180)
             b["width"] = calc_posi(max_x - 360) - b["xp"]
-            print(min_x, max_x)
-            print(calc_posi(-180), calc_posi(180), a, b)
+            # print(min_x, max_x)
+            # print(calc_posi(-180), calc_posi(180), a, b)
             rects.append(b)
     return rects
 
@@ -100,7 +111,13 @@ def rect_posi():
 class MainHandler(tornado.web.RequestHandler):
 
     def get(self):
-        self.render("topo.html", x_list=x_list, x_domain=du_list)
+        pos_to_name = {x_list[0]: "", x_list[-1]: ""}
+        for city in citys:
+            posi = calc_posi(citys[city][0])
+            pos_to_name[posi] = city
+        x = list(sorted(pos_to_name.keys()))
+        du = [pos_to_name[m] for m in x]
+        self.render("topo.html", x_list=x_list, x_domain=du_list, x_list2=x, x_domain2=du)
 
 
 class JsonHandler(tornado.web.RequestHandler):

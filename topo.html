@@ -6,7 +6,7 @@
 </head>
 <body>
 	<!--<p style="color: red;font-size: 20px;">try</p>-->
-	<svg id="topo" width="1450" height="700">
+	<svg id="topo" width="1450" height="7000">
 	 
 	</svg>
 </body>
@@ -33,6 +33,21 @@
 					.attr("font-size", "20px")
 					.attr("dy","0em");
 
+	let x2 = d3.scaleOrdinal().range({{x_list2}});
+	let xScale2 = x2.domain({% raw x_domain2%});
+
+	// x轴
+	let xAxis2 = svg.append('g')
+				   .attr('class', 'xAxisis')
+				   .attr('transform', `translate(0, 25)`)
+				   .call(d3.axisTop(xScale2));
+                    // .append("text")//添加坐标轴说明
+					// .text("经度")
+					// .attr("transform","translate(1350,0)")
+					// .attr("fill","#000")
+					// .attr("font-size", "20px")
+					// .attr("dy","0em");
+
 	let y = d3.scaleOrdinal().range([0,600]);
 	let yScale = y.domain(["", ""]);
 
@@ -58,13 +73,13 @@
                   });
 
     node.append("rect")
-        // .attr("stroke","#666")
-        // .attr("stroke-width","1px")
+        .attr("stroke", d => d.color)
+        .attr("stroke-width","0px")
         .attr("fill", d => d.color)
         .attr("x", d => d.xp)
         .attr("y", d => d.yp)
         .attr("width", d => d.width)
-        .attr("height", "20")
+        .attr("height", d => d.height)
         .on("click",function(d) {
           
         });
@@ -73,8 +88,24 @@
         //     .on("drag", dragged)
         //     .on("end", dragended));
 
+    node.append("text")
+            // .attr("dx", 0)
+            // .attr("dy", ".35em")
+            .attr("x", d => d.xp + d.width/2)
+            .attr("y", d => d.yp + 4 + d.height/2)
+            .attr("style","background-color:white;opacity:1;") //
+            .style("text-anchor", "middle")
+            .style("fill", "#111")
+            .style("font-family", "Arial")
+            .style("font-size", d => d.height * 0.7)
+            .text(d => d.asn);
+
+
     node.append("title")
-        .text(d => d.asn);
+        .text(d => `自治域号：${d.asn}
+                    自治域名称：${d.name.split(',')[1]}
+                    所在国家：${d.name.split(',')[2]}
+                    customer数量：${d.scale}`);
 
     // node.append("text")
     //     .attr("dx", 0)
