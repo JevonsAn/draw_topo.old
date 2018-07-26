@@ -5,17 +5,17 @@ import random
 import math
 import json
 
-from info import asns, citys
+from info import tier1_asns, citys
 
 settings = {
     "static_path": os.path.join(os.path.dirname(__file__), "static"),
 }
-x_scale = [10, 15, 10, 10, 10, 10, 10, 20, 10, 10, 10, 10]
+x_scale = [4, 5, 10, 10, 3, 3, 10, 6, 6, 10, 10, 3]
 x_width = [x / sum(x_scale) * 1200 for x in x_scale]
 x_list = [100 + sum(x_width[:i]) for i in range(len(x_width) + 1)]
 p_list = [-180, -150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180]
 du_list = ['%d° W' % i for i in range(180, -1, -30)] + ['%d° E' % i for i in range(30, 181, 30)]
-
+lines = []
 
 def rand_color():
     def hsv2rgb(h, s, v):
@@ -46,12 +46,20 @@ def rand_color():
         return r, g, b
 
     h = random.randint(0, 360)
-    s = random.randint(0, 256) / 256
-    v = random.randint(190, 220) / 256
+    s = random.randint(0, 150) / 256
+    v = 200 / 256
     r, g, b = hsv2rgb(h, s, v)
+    # print(h,s,v)
     res = "#%2s" % hex(r)[2:] + "%2s" % hex(g)[2:] + "%2s" % hex(b)[2:]
     res = res.upper().replace(" ", "0")
-    return res
+
+    v = 140 / 256
+
+    r, g, b = hsv2rgb(h, s, v)
+    # print(h,s,v)
+    res2 = "#%2s" % hex(r)[2:] + "%2s" % hex(g)[2:] + "%2s" % hex(b)[2:]
+    res2 = res2.upper().replace(" ", "0")
+    return res, res2
 
 
 def calc_posi(lgt):
@@ -63,21 +71,23 @@ def calc_posi(lgt):
     base = x_list[t]
     width = lgt - p_list[t]
     real_width = width / 30 * x_width[t]
-    return base + real_width + 1
+    return base + real_width
 
 
 def rect_posi():
-    thigh = 50
+    thigh = 100
     rects = []
+    dots = []
     # print([t['scale'] for t in asns])
-    asns.sort(key=lambda As: int(As['scale']), reverse=True)
-    for asn in asns:
+    tier1_asns.sort(key=lambda As: int(As['scale']), reverse=True)
+    # print(tier1_asns)
+    for asn in tier1_asns:
         t1 = 3
         t2 = 0
         high = math.log(int(asn["scale"])) * t1 + t2
-        a = {}
+        a = dict()
         a["asn"] = int(asn["asn"])
-        a["color"] = rand_color()
+        a["color"], dark_color = rand_color()
         a["yp"] = thigh + 1
         a["height"] = high
         thigh += high
@@ -93,19 +103,18 @@ def rect_posi():
             a["xp"] = calc_posi(min_x)
             a["width"] = calc_posi(180) - a["xp"]
             rects.append(a)
-            b = {}
-            b["asn"] = a["asn"]
-            b["color"] = a["color"]
-            b["yp"] = a["yp"]
-            b["name"] = a["name"]
-            b["scale"] = a["scale"]
-            b["height"] = a["height"]
+            b = {x: y for x, y in a.items()}
             b["xp"] = calc_posi(-180)
             b["width"] = calc_posi(max_x - 360) - b["xp"]
             # print(min_x, max_x)
             # print(calc_posi(-180), calc_posi(180), a, b)
             rects.append(b)
-    return rects
+        lgts = map(int, asn["posis"].split(","))
+        for l in lgts:
+            dots.append({"xp": calc_posi(l), "yp": a["yp"], "width": 2,
+                         "color": dark_color, "height": a["height"], "lgt": l})
+    # print(rects, dots)
+    return rects, dots
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -115,7 +124,9 @@ class MainHandler(tornado.web.RequestHandler):
         for city in citys:
             posi = calc_posi(citys[city][0])
             pos_to_name[posi] = city
+            lines.append({"xp": posi})
         x = list(sorted(pos_to_name.keys()))
+
         du = [pos_to_name[m] for m in x]
         self.render("topo.html", x_list=x_list, x_domain=du_list, x_list2=x, x_domain2=du)
 
@@ -123,7 +134,9 @@ class MainHandler(tornado.web.RequestHandler):
 class JsonHandler(tornado.web.RequestHandler):
 
     def get(self):
-        self.write(json.dumps(rect_posi()))
+        rects, dots = rect_posi()
+        # print(lines)
+        self.write(json.dumps({"rects": rects, "dots": dots, "lines": lines}))
 
 
 if __name__ == "__main__":
@@ -141,5 +154,5 @@ if __name__ == "__main__":
     http_server = tornado.httpserver.HTTPServer(application)
     # http_server.bind(65530)
     # http_server.start(0)
-    http_server.listen(8880)
+    http_server.listen(5678)
     tornado.ioloop.IOLoop.instance().start()

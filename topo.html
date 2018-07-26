@@ -16,15 +16,13 @@
 <script src="static/d3-selection-multi.v1.js"></script>
 <script>
 	let svg = d3.select("svg#topo");
-	let height = 400;
-	let width = 600;
 	let x = d3.scaleOrdinal().range({{x_list}});
 	let xScale = x.domain({% raw x_domain%});
 
 	// x轴
 	let xAxis = svg.append('g')
 				   .attr('class', 'xAxisis')
-				   .attr('transform', `translate(0, 50)`)
+				   .attr('transform', `translate(0, 100)`)
 				   .call(d3.axisTop(xScale))
 		            .append("text")//添加坐标轴说明
 					.text("经度")
@@ -39,7 +37,7 @@
 	// x轴
 	let xAxis2 = svg.append('g')
 				   .attr('class', 'xAxisis')
-				   .attr('transform', `translate(0, 25)`)
+				   .attr('transform', `translate(0, 75)`)
 				   .call(d3.axisTop(xScale2));
                     // .append("text")//添加坐标轴说明
 					// .text("经度")
@@ -47,25 +45,71 @@
 					// .attr("fill","#000")
 					// .attr("font-size", "20px")
 					// .attr("dy","0em");
+	let ticks = xAxis2.selectAll("g.tick");
+	let dArray = [];
+	for (let i=0;i<ticks._groups[0].length;i++ ){
+	 	dArray.push(ticks._groups[0][i].textContent);
+	}
+
+	ticks.data(dArray)
+		.attr("id", d => d);
+
+	let xyt = svg.select("g#西雅图");
+	xyt.select("line").attr("y2", "-20");
+	xyt.select("text").attr("y", "-25");
+
+	let jjs = svg.select("g#旧金山");
+	jjs.select("line").attr("y2", "-20");
+	jjs.select("text").attr("y", "-40");
+
+	let nw = svg.select("g#纽约");
+	nw.select("line").attr("y2", "-20");
+	nw.select("text").attr("y", "-25");
+
+	let lsj = svg.select("g#洛杉矶");
+	lsj.select("text").html("&nbsp;&nbsp;&nbsp;洛杉矶");
+
+	let yhc = svg.select("g#盐湖城");
+	yhc.select("text").html("&nbsp;&nbsp;&nbsp;盐湖城");
+
+	let sh = svg.select("g#上海");
+	sh.append("text").attr("fill", "#000").attr("y", "-20").attr("dy", "0em").html("台北");
+	let amstd = svg.select("g#阿姆斯特丹");
+	amstd.select("text").attr("y", "-45");
+	amstd.select("line").attr("y2", "-22");
+	amstd.append("text").attr("fill", "#000").attr("y", "-25").attr("dy", "0em").html("鹿特丹(荷兰)");
+	amstd.append("text").attr("fill", "#000").attr("y", "-35").attr("dy", "0em").html("布鲁塞尔(比利时)");
+
+	let xg = svg.select("g#香港");
+	xg.select("text").attr("y", "-25");
+	xg.select("line").attr("y2", "-22");
+	xg.append("text").attr("fill", "#000").attr("y", "-35").attr("dy", "0em").html("深圳");
+	xg.append("text").attr("fill", "#000").attr("y", "-45").attr("dy", "0em").html("石家庄");
+	xg.append("text").attr("fill", "#000").attr("y", "-55").attr("dy", "0em").html("武汉");
+
+	let xdl = svg.select("g#新德里");
+	xdl.select("line").attr("y2", "-20");
+	xdl.select("text").attr("y", "-25");
 
 	let y = d3.scaleOrdinal().range([0,600]);
 	let yScale = y.domain(["", ""]);
 
 	// y轴
-	let yAxis = svg.append('g')
-				   .attr('class', 'yAxisis')
-				   .attr('transform', `translate(100, 50)`)
-				   .call(d3.axisLeft(yScale));
-					// .append("text")//添加坐标轴说明
-					// .text("经度")
-					// .attr("transform","translate(1350,0)")
-					// .attr("fill","#000");
+	let yAxis = d3.axisLeft(yScale);
+	yAxis.tickValues();
+	yAxis.tickSize(2, 5);
+	yAxis.tickPadding(5);
+	svg.append('g')
+	   .attr('class', 'yAxisis')
+	   .attr('transform', `translate(99, 100)`)
+	   .call(yAxis);
+
 
 	d3.json("json", function(error, graph) {
     if (error) throw error;
 
     let node = svg.selectAll(".node")
-                  .data(graph)
+                  .data(graph.rects)
                 .enter().append("g")
                   .attr("class", "node")
                   .attr("id",function (d) {
@@ -88,7 +132,40 @@
         //     .on("drag", dragged)
         //     .on("end", dragended));
 
-    node.append("text")
+	node.append("title")
+        .text(d => `自治域号：${d.asn}
+                    自治域名称：${d.name.split(',')[1]}
+                    所在国家：${d.name.split(',')[2]}
+                    customer数量：${d.scale}`);
+
+	let node2 = svg.selectAll(".node2")
+                  .data(graph.dots)
+                .enter().append("g")
+                  .attr("class", "node2")
+                  .attr("id",function (d) {
+                    return "node2"+d.asn;
+                  });
+
+    node2.append("rect")
+        .attr("stroke", d => d.color)
+        .attr("stroke-width","0px")
+        .attr("fill", d => d.color)
+        .attr("x", d => d.xp)
+        .attr("y", d => d.yp)
+        .attr("width", d => d.width)
+        .attr("height", d => d.height);
+
+    node2.append("title")
+        .text(d => `${d.lgt}`);
+
+    let node3 = svg.selectAll(".node3")
+                  .data(graph.rects)
+                .enter().append("g")
+                  .attr("class", "node3")
+                  .attr("id",function (d) {
+                    return "node3"+d.asn;
+                  });
+    node3.append("text")
             // .attr("dx", 0)
             // .attr("dy", ".35em")
             .attr("x", d => d.xp + d.width/2)
@@ -98,30 +175,27 @@
             .style("fill", "#111")
             .style("font-family", "Arial")
             .style("font-size", d => d.height * 0.7)
-            .text(d => d.asn);
+            .text(d => `${d.asn},${d.name.split(',')[1].split(' ')[1]},${d.name.split(',')[2]}`);
 
 
-    node.append("title")
-        .text(d => `自治域号：${d.asn}
-                    自治域名称：${d.name.split(',')[1]}
-                    所在国家：${d.name.split(',')[2]}
-                    customer数量：${d.scale}`);
+    let link = svg.selectAll(".link")
+                  .data(graph.lines)
+                .enter().append("g")
+                  .attr("class", "link");
+    link.append("line")
+            .attr("x1", d => d.xp)
+            .attr("y1", 70)
+            .attr("x2", d => d.xp)
+            .attr("y2", 5000)
+            .attr("style","background-color:white;opacity:1;")
+			.attr("stroke-dasharray", "2 2")
+			.attr("stroke", "#444")
+			.attr("stroke-width", "1px");
 
-    // node.append("text")
-    //     .attr("dx", 0)
-    //     .attr("dy", ".35em")
-    //     .attr("id", function(d) {
-    //       return "text"+d.id;
-    //     })
-    //     .attr("style","background-color:white;opacity:1;")
-    //     .style("text-anchor", "middle")
-    //     .style("fill", "#444")
-    //     .style("font-family", "Arial")
-    //     .style("font-size", 9)
-    //     .text(function(d) {
-    //       return d.ASN;
-    //     })
-    //     .call(getBB);
+
+
+
+
   });
 
 </script>
