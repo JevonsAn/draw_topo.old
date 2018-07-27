@@ -7,6 +7,15 @@ with open("static/tier1_info.txt") as f:
             As["asn"], As["name"], As["country"], As["scale"], As["min_lgt"], As["max_lgt"], As["dms"], As["posis"] = sp
             tier1_asns.append(As)
 
+tier2_asns = []
+with open("static/tier2_info.txt") as f:
+    for line in f.readlines():
+        sp = line.strip().split("|")
+        As = {}
+        if len(sp) == 8:
+            As["asn"], As["name"], As["country"], As["scale"], As["min_lgt"], As["max_lgt"], As["dms"], As["posis"] = sp
+            tier2_asns.append(As)
+
 citys = {
     "北京": [116.39723, 39.9075],
     "纽约": [

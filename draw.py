@@ -5,17 +5,22 @@ import random
 import math
 import json
 
-from info import tier1_asns, citys
+from info import tier1_asns, citys, tier2_asns
 
 settings = {
     "static_path": os.path.join(os.path.dirname(__file__), "static"),
 }
-x_scale = [4, 5, 10, 10, 3, 3, 10, 6, 6, 10, 10, 3]
+x_scale = [4, 5, 10, 10, 10, 3, 10, 6, 6, 10, 10, 3]
 x_width = [x / sum(x_scale) * 1200 for x in x_scale]
 x_list = [100 + sum(x_width[:i]) for i in range(len(x_width) + 1)]
 p_list = [-180, -150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 180]
 du_list = ['%d° W' % i for i in range(180, -1, -30)] + ['%d° E' % i for i in range(30, 181, 30)]
+
+# rects = []
+# dots = []
 lines = []
+# tier2_rects = []
+
 
 def rand_color():
     def hsv2rgb(h, s, v):
@@ -75,9 +80,12 @@ def calc_posi(lgt):
 
 
 def rect_posi():
-    thigh = 100
     rects = []
     dots = []
+    # lines = []
+    tier2_rects = []
+
+    thigh = 100
     # print([t['scale'] for t in asns])
     tier1_asns.sort(key=lambda As: int(As['scale']), reverse=True)
     # print(tier1_asns)
@@ -114,8 +122,37 @@ def rect_posi():
             dots.append({"xp": calc_posi(l), "yp": a["yp"], "width": 2,
                          "color": dark_color, "height": a["height"], "lgt": l})
     # print(rects, dots)
-    return rects, dots
+    thigh += 40
+    # print(tier2_asns)
+    for asn in tier2_asns:
+        high = 12
+        a = dict()
+        # print(asn["asn"])
+        a["asn"] = int(asn["asn"])
+        a["color"], dark_color = rand_color()
+        a["yp"] = thigh + 1
+        a["height"] = high
+        thigh += high
+        a["name"] = f'{asn["asn"]}, {asn["name"]}, {asn["country"]}'
+        a["scale"] = asn["scale"]
+        min_x = float(asn["min_lgt"])
+        max_x = float(asn["max_lgt"])
+        if max_x <= 180:
+            a["xp"] = calc_posi(min_x)
+            a["width"] = calc_posi(max_x) - a["xp"]
+            tier2_rects.append(a)
+        else:
+            a["xp"] = calc_posi(min_x)
+            a["width"] = calc_posi(180) - a["xp"]
+            tier2_rects.append(a)
+            b = {x: y for x, y in a.items()}
+            b["xp"] = calc_posi(-180)
+            b["width"] = calc_posi(max_x - 360) - b["xp"]
+            # print(min_x, max_x)
+            # print(calc_posi(-180), calc_posi(180), a, b)
+            tier2_rects.append(b)
 
+    return rects, dots, tier2_rects
 
 class MainHandler(tornado.web.RequestHandler):
 
@@ -134,9 +171,10 @@ class MainHandler(tornado.web.RequestHandler):
 class JsonHandler(tornado.web.RequestHandler):
 
     def get(self):
-        rects, dots = rect_posi()
         # print(lines)
-        self.write(json.dumps({"rects": rects, "dots": dots, "lines": lines}))
+        rects, dots, tier2_rects = rect_posi()
+        # print(tier2_rects[:20])
+        self.write(json.dumps({"rects": rects, "dots": dots, "lines": lines, "rect2s": tier2_rects}))
 
 
 if __name__ == "__main__":

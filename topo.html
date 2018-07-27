@@ -5,6 +5,9 @@
 	<link href="static/bootstrap.css" rel="stylesheet">
 </head>
 <body>
+	<button id="lineBt">
+		显示城市定位线
+	</button>
 	<!--<p style="color: red;font-size: 20px;">try</p>-->
 	<svg id="topo" width="1450" height="7000">
 	 
@@ -91,7 +94,7 @@
 	xdl.select("line").attr("y2", "-20");
 	xdl.select("text").attr("y", "-25");
 
-	let y = d3.scaleOrdinal().range([0,600]);
+	let y = d3.scaleOrdinal().range([0,6000]);
 	let yScale = y.domain(["", ""]);
 
 	// y轴
@@ -108,12 +111,12 @@
 	d3.json("json", function(error, graph) {
     if (error) throw error;
 
-    let node = svg.selectAll(".node")
+    let node = svg.selectAll(".tier1_rects")
                   .data(graph.rects)
                 .enter().append("g")
-                  .attr("class", "node")
+                  .attr("class", "tier1_rects")
                   .attr("id",function (d) {
-                    return "node"+d.asn;
+                    return "tier1_rects"+d.asn;
                   });
 
     node.append("rect")
@@ -138,13 +141,10 @@
                     所在国家：${d.name.split(',')[2]}
                     customer数量：${d.scale}`);
 
-	let node2 = svg.selectAll(".node2")
+	let node2 = svg.selectAll(".tier1_lgts")
                   .data(graph.dots)
                 .enter().append("g")
-                  .attr("class", "node2")
-                  .attr("id",function (d) {
-                    return "node2"+d.asn;
-                  });
+                  .attr("class", "tier1_lgts");
 
     node2.append("rect")
         .attr("stroke", d => d.color)
@@ -158,12 +158,12 @@
     node2.append("title")
         .text(d => `${d.lgt}`);
 
-    let node3 = svg.selectAll(".node3")
+    let node3 = svg.selectAll(".tier1_texts")
                   .data(graph.rects)
                 .enter().append("g")
-                  .attr("class", "node3")
+                  .attr("class", "tier1_texts")
                   .attr("id",function (d) {
-                    return "node3"+d.asn;
+                    return "tier1_texts"+d.asn;
                   });
     node3.append("text")
             // .attr("dx", 0)
@@ -178,7 +178,39 @@
             .text(d => `${d.asn},${d.name.split(',')[1].split(' ')[1]},${d.name.split(',')[2]}`);
 
 
-    let link = svg.selectAll(".link")
+
+
+	let tier2_node = svg.selectAll(".tier2_rects")
+                  .data(graph.rect2s)
+                .enter().append("g")
+                  .attr("class", "tier2_rects")
+                  .attr("id",function (d) {
+                    return "tier2_rects"+d.asn;
+                  });
+	// console.log(graph.rect2s[0]);
+    tier2_node.append("rect")
+        .attr("stroke", d => d.color)
+        .attr("stroke-width","0px")
+        .attr("fill", d => d.color)
+        .attr("x", d => d.xp)
+        .attr("y", d => d.yp)
+        .attr("width", d => d.width)
+        .attr("height", d => d.height)
+        .on("click",function(d) {
+
+        });
+        // .call(d3.drag()
+        //     .on("start", dragstarted)
+        //     .on("drag", dragged)
+        //     .on("end", dragended));
+
+	tier2_node.append("title")
+        .text(d => `自治域号：${d.asn}
+                    自治域名称：${d.name.split(',')[1]}
+                    所在国家：${d.name.split(',')[2]}
+                    customer数量：${d.scale}`);
+
+	let link = svg.selectAll(".link")
                   .data(graph.lines)
                 .enter().append("g")
                   .attr("class", "link");
@@ -187,16 +219,28 @@
             .attr("y1", 70)
             .attr("x2", d => d.xp)
             .attr("y2", 5000)
-            .attr("style","background-color:white;opacity:1;")
+            .attr("style","background-color:white;opacity:0;")
 			.attr("stroke-dasharray", "2 2")
 			.attr("stroke", "#444")
 			.attr("stroke-width", "1px");
 
-
-
-
-
   });
 
+</script>
+<script>
+	let btFlag = 1;
+	$("#lineBt").click(function (){
+		let lines = d3.selectAll("g.link").selectAll("line");
+		if (btFlag === 0){
+			lines.style("opacity", 0);
+			btFlag = 1;
+			$("#lineBt").html("显示城市定位线");
+		}
+		else {
+		    lines.style("opacity", 10);
+			btFlag = 0;
+			$("#lineBt").html("隐藏城市定位线");
+		}
+    })
 </script>
 </html>
