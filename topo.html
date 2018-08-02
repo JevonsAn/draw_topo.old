@@ -1,18 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
 	<title>自治域拓扑图</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 	<link href="static/bootstrap.css" rel="stylesheet">
 </head>
 <body>
-	<button id="lineBt">
-		显示城市定位线
-	</button>
-	<!--<p style="color: red;font-size: 20px;">try</p>-->
-	<svg id="topo" width="1450" height="7000">
-	 
-	</svg>
+    <div class="container-fluid">
+        <div class="row" style="margin-top: 15px;">
+            <div class="col-md-2"  style="margin-left: 50px;">
+                <input type="text" class="form-control" id="searchIp" style="margin-left: 30px;" placeholder="请输入自治域号">
+            </div>
+            <div class="col-md-2" style="margin-left: 10px;">
+                <button id="searchBt" class="btn btn-info">
+                    搜索
+                </button>
+            </div>
+
+            <div class="col-md-1 col-md-offset-5"  style="padding-left: 50px;">
+                <button id="lineBt" class="btn btn-default">
+                    显示城市定位线
+                </button>
+            </div>
+
+        </div>
+        <!--<p style="color: red;font-size: 20px;">try</p>-->
+        <div class="row">
+            <svg id="topo" width="1450" height="7000">
+
+            </svg>
+        </div>
+    </div>
 </body>
+<style>
+    .word {
+        text-shadow: 1px 0 0 #EEE, 0 1px 0 #EEE,
+        0 -1px 0 #EEE, -1px 0 0 #EEE,
+        1px 0 1px #EEE, 0 1px 1px #EEE,
+        0 -1px 1px #EEE, -1px 0 1px #EEE;
+    }
+    @-webkit-keyframes twinkling{ /*透明度由0到1*/
+        0%{
+            opacity:0; /*透明度为0*/
+        }
+        100%{
+            opacity:1; /*透明度为1*/
+        }
+    }
+    .twink {
+        -webkit-animation: twinkling 1s infinite ease-in-out;
+    }
+</style>
 <script src="static/jquery-3.3.1.min.js"></script>
 <script src="static/bootstrap.js"></script>
 <script src="static/d3.js"></script>
@@ -111,6 +149,8 @@
 	d3.json("json", function(error, graph) {
     if (error) throw error;
 
+    // console.log(graph);
+
     let node = svg.selectAll(".tier1_rects")
                   .data(graph.rects)
                 .enter().append("g")
@@ -123,6 +163,7 @@
         .attr("stroke", d => d.color)
         .attr("stroke-width","0px")
         .attr("fill", d => d.color)
+        .attr("id", d => `as${d.asn}`)
         .attr("x", d => d.xp)
         .attr("y", d => d.yp)
         .attr("width", d => d.width)
@@ -141,8 +182,9 @@
                     所在国家：${d.name.split(',')[2]}
                     customer数量：${d.scale}`);
 
-	let node2 = svg.selectAll(".tier1_lgts")
-                  .data(graph.dots)
+	let node2 = svg.append("g")
+                    .selectAll(".tier1_lgts")
+                  .data(graph.lgts)
                 .enter().append("g")
                   .attr("class", "tier1_lgts");
 
@@ -158,29 +200,7 @@
     node2.append("title")
         .text(d => `${d.lgt}`);
 
-    let node3 = svg.selectAll(".tier1_texts")
-                  .data(graph.rects)
-                .enter().append("g")
-                  .attr("class", "tier1_texts")
-                  .attr("id",function (d) {
-                    return "tier1_texts"+d.asn;
-                  });
-    node3.append("text")
-            // .attr("dx", 0)
-            // .attr("dy", ".35em")
-            .attr("x", d => d.xp + d.width/2)
-            .attr("y", d => d.yp + 4 + d.height/2)
-            .attr("style","background-color:white;opacity:1;") //
-            .style("text-anchor", "middle")
-            .style("fill", "#111")
-            .style("font-family", "Arial")
-            .style("font-size", d => d.height * 0.7)
-            .text(d => `${d.asn},${d.name.split(',')[1].split(' ')[1]},${d.name.split(',')[2]}`);
-
-
-
-
-	let tier2_node = svg.selectAll(".tier2_rects")
+    let tier2_node = svg.selectAll(".tier2_rects")
                   .data(graph.rect2s)
                 .enter().append("g")
                   .attr("class", "tier2_rects")
@@ -190,6 +210,7 @@
 	// console.log(graph.rect2s[0]);
     tier2_node.append("rect")
         .attr("stroke", d => d.color)
+        .attr("id", d => `as${d.asn}`)
         .attr("stroke-width","0px")
         .attr("fill", d => d.color)
         .attr("x", d => d.xp)
@@ -209,6 +230,53 @@
                     自治域名称：${d.name.split(',')[1]}
                     所在国家：${d.name.split(',')[2]}
                     customer数量：${d.scale}`);
+
+    let dots = svg.append("g").selectAll(".leaf_dot")
+                .data(graph.dots)
+                .enter()
+                .append("g");
+
+    dots.append("circle")
+        .attr("cx", d => d.xp)
+        .attr("cy", d => d.yp)
+        .attr("r", 2)
+        .attr("id", d => `as${d.other.split("|")[0]}`)
+        .attr("fill", d => d.color)
+        .on("mouseover", function () {
+                d3.select(this).attr("r", 5).attr("fill", "red");
+            }
+        )
+        .on("mouseout", function (d) {
+                d3.select(this).attr("r", 2).attr("fill", d => d.color);
+            }
+        );
+
+    dots.append("title")
+        .text(d => `自治域号：${d.other.split("|")[0]}
+                    自治域名称：${d.other.split('|')[1]}
+                    所在国家：${d.other.split('|')[2]}
+                    经度：${d.lgt}`);
+
+    let node3 = svg.selectAll(".tier1_texts")
+                  .data(graph.rects)
+                .enter().append("g")
+                  .attr("class", "tier1_texts")
+                  .attr("id",function (d) {
+                    return "tier1_texts"+d.asn;
+                  });
+    node3.append("text")
+            // .attr("dx", 0)
+            // .attr("dy", ".35em")
+            .attr("x", d => d.xp + d.width/2)
+            .attr("y", d => d.yp + 4 + d.height/2)
+            .attr("style","background-color:white;opacity:1;")
+            .style("text-anchor", "middle")
+            .attr("class", "word")
+            .style("fill", "#000")
+            .style("font-family", "Arial")
+            .style("font-size", d => d.height * 0.7)
+            .text(d => `${d.asn},${d.name.split(',')[1].split(' ')[1]},${d.name.split(',')[2]}`);
+
 
 	let link = svg.selectAll(".link")
                   .data(graph.lines)
@@ -241,6 +309,44 @@
 			btFlag = 0;
 			$("#lineBt").html("隐藏城市定位线");
 		}
-    })
+    });
+
+	let last = undefined;
+    $("#searchBt").click(function () {
+        let asn = $("#searchIp").val();
+        let target = undefined;
+        if (last){
+            last.remove();
+        }
+        target = $(`#as${asn}`);
+        console.log(target.length);
+        if (target.length){
+            if (target[0].tagName === 'rect'){
+                last = svg.append("rect")
+                    .attr("x", target.attr("x") - 6)
+                    .attr("y", target.attr("y") - 5)
+                    .attr("width", parseFloat(target.attr("width")) + 12)
+                    .attr("height", parseFloat(target.attr("height")) + 10)
+                    .attr("stroke", "red")
+                    .attr("class", "twink")
+                    .attr("fill", "none")
+                    .attr("stroke-width", "2px");
+            }
+            else if (target[0].tagName === 'circle'){
+                last = svg.append("circle")
+                    .attr("cx", target.attr("cx"))
+                    .attr("cy", target.attr("cy"))
+                    .attr("r", parseFloat(target.attr("r")) + 6)
+                    .attr("stroke", "red")
+                    .attr("fill", "none")
+                    .attr("class", "twink")
+                    .attr("stroke-width", "2px");
+            }
+        }
+        else{
+            alert("未查询到该自治域!");
+        }
+
+    });
 </script>
 </html>

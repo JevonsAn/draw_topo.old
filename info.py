@@ -1,3 +1,17 @@
+asn_leafs = dict()
+# 18881|22561|RPNET INFORMATICA LTDA - ME|BR|-53.4552996887207|-24.9558
+with open("static/leafs.txt", encoding="utf-8") as f:
+    for line in f.readlines():
+        sp = line.strip().split("|")
+        pvd = int(sp[0])
+        lgt = float(sp[4])
+        other = f'{sp[1]}|{sp[2]}|{sp[3]}|{sp[5]}'
+        if pvd not in asn_leafs:
+            asn_leafs[pvd] = [(lgt, other)]
+        else:
+            asn_leafs[pvd].append((lgt, other))
+
+
 tier1_asns = []
 with open("static/tier1_info.txt") as f:
     for line in f.readlines():
