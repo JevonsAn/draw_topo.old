@@ -1,4 +1,4 @@
-# from sql_operation import *
+from sql_operation import *
 # from asn_to_cnum_dict import asn_to_cnum_dict
 # from pymysql import IntegrityError
 # from prefix_to_asn_dict import ip_to_asn_dict
@@ -91,33 +91,33 @@ def max_min_ip_in_prefix(prefix, length):
 """
     计算各自治域的custom数量并把关系写入数据库
 """
-# asn_to_custom_num_dict = {}
-# links = get_links()
-# exe_list = []
-# for link in links:
-#     as1 = link[0]
-#     as2 = link[1]
-#     relationship = link[2]
-#     if relationship == "P2C":
-#         if as1 in asn_to_custom_num_dict:
-#             asn_to_custom_num_dict[as1] += 1
-#         else:
-#             asn_to_custom_num_dict[as1] = 1
-#         exe_list.append((as1, as2))
-#     elif relationship == "C2P":
-#         if as2 in asn_to_custom_num_dict:
-#             asn_to_custom_num_dict[as2] += 1
-#         else:
-#             asn_to_custom_num_dict[as2] = 1
-#         exe_list.append((as2, as1))
-#     else:
-#         if as1 not in asn_to_custom_num_dict:
-#             asn_to_custom_num_dict[as1] = 0
-#         if as2 not in asn_to_custom_num_dict:
-#             asn_to_custom_num_dict[as2] = 0
-# print(len(exe_list))
-# insert_relation_many(exe_list)
-# print(asn_to_custom_num_dict, file=open("asn_to_cnum_dict.py", "w"))
+asn_to_custom_num_dict = {}
+links = get_links()
+exe_list = []
+for link in links:
+    as1 = link[0]
+    as2 = link[1]
+    relationship = link[2]
+    if relationship == "P2C":
+        if as1 in asn_to_custom_num_dict:
+            asn_to_custom_num_dict[as1] += 1
+        else:
+            asn_to_custom_num_dict[as1] = 1
+        exe_list.append((as1, as2))
+    elif relationship == "C2P":
+        if as2 in asn_to_custom_num_dict:
+            asn_to_custom_num_dict[as2] += 1
+        else:
+            asn_to_custom_num_dict[as2] = 1
+        exe_list.append((as2, as1))
+    else:
+        if as1 not in asn_to_custom_num_dict:
+            asn_to_custom_num_dict[as1] = 0
+        if as2 not in asn_to_custom_num_dict:
+            asn_to_custom_num_dict[as2] = 0
+print(len(exe_list))
+insert_relation_many(exe_list)
+print(asn_to_custom_num_dict, file=open("asn_to_cnum_dict.py", "w"))
 
 
 """
@@ -228,7 +228,7 @@ def max_min_ip_in_prefix(prefix, length):
 #             asn_positions[asn] = {"lgt": [pos1[0], pos2[0]], "dms": [dimension]}
 
 
-def calc_width(l):
+def calc_width(l, jiange):
     max_wid = 0
     max_index = 0
     for i in range(len(l) - 1):
@@ -238,7 +238,6 @@ def calc_width(l):
         if wid > max_wid:
             max_wid = wid
             max_index = i + 1
-        print(this, next, max_wid, max_index)
     this = l[len(l) - 1]
     next = l[0]
     if this * next < 0:
@@ -246,11 +245,34 @@ def calc_width(l):
         if wid > max_wid:
             max_wid = wid
             max_index = 0
-        print(this, next, max_wid, max_index)
-    return l[max_index], 360 - max_wid
+    indexs = []
+    indexs.append(max_index)
+    for i in range(0, len(l) - 1):
+        ai = (max_index + i) % len(l)
+        bi = (max_index + i + 1) % len(l)
+        this = l[ai]
+        next = l[bi]
+        if bi == 0:
+            wid = 180 - this + next + 180
+        else:
+            wid = next - this
+        if wid > jiange:
+            indexs.append(bi)
+
+    rects = [(l[x], l[(indexs[i + 1]) % len(l) - 1]) for i, x in enumerate(indexs[:-1])] + [(l[indexs[-1]], l[indexs[0] - 1],)]
+    new_rects = []
+    for i, r in enumerate(rects):
+        if r[0] == r[1]:
+            new_rects.append((r[0] - 3, r[0] + 3))
+        elif r[0] > 0 and r[1] < 0:
+            new_rects.append((r[0], 180))
+            new_rects.append((-180, r[1]))
+        else:
+            new_rects.append(r)
+    return new_rects
 
 
-print(calc_width([-170, 2, 3, 4, 86]))
+print(calc_width([-170, -90, 2, 3, 4, 160], 50))
 
 # asn_posi = {}
 # for asn in asn_positions:
